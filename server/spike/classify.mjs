@@ -1,4 +1,4 @@
-export const thresholds = { inaccuracy: 50, mistake: 100, blunder: 300 }
+export const thresholds = { inaccuracy: 50, mistake: 100, blunder: 200 }
 
 export function classifyLoss(loss) {
     if (loss >= thresholds.blunder) return 'blunder'
@@ -7,7 +7,7 @@ export function classifyLoss(loss) {
     return 'ok'
 }
 
-export function pickTopMistakes(moves, {max=5, minLoss=100, color=null} = {}) {
+export function pickTopMistakes(moves, {max=7, minLoss=80, color=null} = {}) {
     return moves
     .filter(m => color ? m.color === color : true)
     .filter(m => m.loss >= minLoss)
