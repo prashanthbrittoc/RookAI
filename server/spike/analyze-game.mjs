@@ -1,40 +1,32 @@
-import fs from "fs"
-import { getPositions } from "./pgn.mjs"
-import { evaluateFen } from "./engine.mjs"
-import { scoreToCp,moveLoss } from "./score.mjs"
+import { getPositions } from './pgn.mjs'
+import { evaluateFen } from './engine.mjs'
+import { scoreToCp, moveLoss } from './score.mjs'
+import { pickTopMistakes } from './classify.mjs'
 
-try {
-    const ENGINE = process.argv[2]
-    const pgn_file = process.argv[3]
-    const depth = 10
+export async function analyzeGame(enginePath, pgn, { depth=10, color=null}  = {}) {
+    const positions = getPositions(pgn)
+    const fens = [positions[0].fenBefore, ...positions.map(p => p.fenAfter)]
 
-    const positions = getPositions(fs.readFileSync(pgn_file,'utf8'))
-
-    const fens = [positions[0].fenBefore, ...positions.map((p) => p.fenAfter)]
-
-    console.log('Analysis')
     const evals = []
-    for (let i=0; i<fens.length; i++)
+    for (const fen of fens)
     {
-        const r = await evaluateFen(ENGINE,fens[i],depth)
-        evals.push({cp: scoreToCp(r.score), bestMove: r.bestMove})
-        process.stdout.write(`\rEvaluated ${i+1}/${fens.length}`)
+        const r = await evaluateFen(enginePath, fen, depth)
+        evals.push({cp: r.score ? scoreToCp(r.score) : -1000, bestMove: r.bestMove})
     }
-    console.log()
-    console.timeEnd('analysis')
 
-    const results = positions.map((p,i) => ({
-        moveNo: p.moveNumber,
+    const moves = positions.map((p,i) => ({
+        ply: p.ply,
+        moveNumber: p.moveNumber,
         color: p.color,
         played: p.san,
         playedUci: p.uci,
-        best: evals[i].bestMove,
+        bestUci: evals[i].bestMove,
+        fenBefore: p.fenBefore,
+        fenAfter: p.fenAfter,
+        beforeCp: evals[i].cp,
+        afterCp: -evals[i+1].cp,
         loss: moveLoss(evals[i].cp,evals[i+1].cp)
     }))
 
-    console.table(results)
-}
-catch (err)
-{
-    console.log("Error: ",err.message)
+    return { moves, topMistakes: pickTopMistakes(moves,{ color }) }
 }
