@@ -1,12 +1,20 @@
 import fs from 'fs'
+import { Engine } from './engine.mjs'
 import { analyzeGame } from './analyze-game.mjs'
 
 const [ENGINE, PGN_FILE, COLOR] = process.argv.slice(2)
 const PGN = fs.readFileSync(PGN_FILE, 'utf-8')
 
+const engine = ENGINE.endsWith('.js')
+  ? new Engine('node', [ENGINE])   // JS file: run it with node
+  : new Engine(ENGINE)             // real binary: run it directlyawait engine.init()
+
+
 console.time('Analysis')
-const { topMistakes } = await analyzeGame(ENGINE,PGN, { color: COLOR })
+const { topMistakes } = await analyzeGame(engine,PGN, { color: COLOR })
 console.timeEnd('Analysis')
+
+engine.quit()
 
 console.table(topMistakes.map(m => ({
     move: `${m.moveNumber}${m.color === 'w' ? '.' : '...'} ${m.played}`,
