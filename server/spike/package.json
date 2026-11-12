@@ -11,7 +11,9 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "chess.js": "^1.4.0",
+    "dotenv": "^18.0.10",
     "stockfish": "^19.0.1"
   },
   "devDependencies": {
