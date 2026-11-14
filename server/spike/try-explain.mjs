@@ -12,9 +12,6 @@ await engine.init()
 const { topMistakes } = await analyzeGame(engine, fs.readFileSync(PGN_FILE, 'utf-8'), { color: COLOR })
 engine.quit()
 
-console.log(Object.keys(topMistakes[0]));
-console.log(buildFacts(topMistakes[0]));
-
 for (const m of topMistakes)
 {
     const { text, usage } = await explainMistake(m)
