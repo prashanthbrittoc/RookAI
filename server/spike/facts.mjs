@@ -2,10 +2,10 @@ import { Chess } from "chess.js"
 
 export function uciToSan(fen, uci)
 {
-    if (!uci || uci === 'none') return null
+    if (!uci || uci === '(none)') return null
     
     try {
-        const chess = new chess(fen)
+        const chess = new Chess(fen)
         const move = chess.move({
             from: uci.slice(0,2),
             to: uci.slice(2,4),

@@ -3,13 +3,17 @@ import { Engine } from './engine.mjs'
 import { analyzeGame } from './analyze-game.mjs'
 import { explainMistake } from './explain.mjs'
 import { createEngine } from './create-engine.mjs'
+import { buildFacts } from './facts.mjs'
 
 const [ PGN_FILE, COLOR ] = process.argv.slice(2)
 
 const engine = await createEngine()
 await engine.init()
-const { topMistakes } = await analyzeGame(engine, fs.readFileSync(PGN_FILE, 'utf-8'), { color: COLOR})
+const { topMistakes } = await analyzeGame(engine, fs.readFileSync(PGN_FILE, 'utf-8'), { color: COLOR })
 engine.quit()
+
+console.log(Object.keys(topMistakes[0]));
+console.log(buildFacts(topMistakes[0]));
 
 for (const m of topMistakes)
 {

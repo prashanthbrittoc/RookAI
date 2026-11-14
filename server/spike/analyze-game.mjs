@@ -25,7 +25,7 @@ export async function analyzeGame(engine, pgn, { depth=10, color=null}  = {}) {
         beforeCp: evals[i].cp,
         afterCp: -evals[i+1].cp,
         loss: moveLoss(evals[i].cp,evals[i+1].cp),
-        replyUCI: evals[i+1].bestMove
+        replyUci: evals[i+1].bestMove
     }))
 
     return { moves, topMistakes: pickTopMistakes(moves,{ color }) }
