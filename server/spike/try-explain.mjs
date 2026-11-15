@@ -14,8 +14,10 @@ engine.quit()
 
 for (const m of topMistakes)
 {
-    const { text, usage } = await explainMistake(m)
+    const { title, explanation, tip, usage } = await explainMistake(m)
     console.log(`\n${m.moveNumber}. ${m.played} (${m.label})`)
-    console.log(text)
+    console.log(title)
+    console.log(explanation)
+    console.log(tip)
     console.log(`tokens: ${usage.input_tokens} in / ${usage.output_tokens} out`)
 }

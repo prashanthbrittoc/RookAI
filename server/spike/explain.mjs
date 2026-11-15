@@ -1,42 +1,84 @@
-import 'dotenv/config'
-import { Anthropic } from '@anthropic-ai/sdk'
-import { buildFacts } from './facts.mjs'
+import 'dotenv/config';
+import Anthropic from '@anthropic-ai/sdk';
+import { buildFacts } from './facts.mjs';
 
-const client = new Anthropic()
-const MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-5-5'
+const THINKING = {
+  'claude-haiku-5-5': { type: 'disabled' },
+  'claude-sonnet-5-5': { type: 'between_tools' },
+};
+
+const client = new Anthropic();
+export const DEFAULT_MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-5-5';
 
 const SYSTEM = `You are a friendly chess coach for beginners rated 400-1200.
-Explain ONE mistake in 2-3 short sentences of plain English.
+You explain ONE mistake at a time.
 
 Rules:
-- Use only the facts provided. Never invent moves, pieces or tactics that are not listed.
-- No engine jargon: never say "centipawns" or quote evaluation numbers. Say things like "you lose a pawn" or "you lose a knight's worth".
-- Say what went wrong, then what to try instead.
-- Be encouraging, never harsh.`
+- Use ONLY the facts provided. Never mention moves, pieces, squares or tactics that are not in the facts.
+- Never mention engine numbers, "centipawns" or evaluations. Say things like "you lose a knight" or "you give up a pawn".
+- Plain English, short words, no jargon. Be encouraging, never harsh.
+- Say what the better move is, but do NOT explain why it is better unless the facts say so. Use phrasing like "a stronger move was Rd3".
+- The explanation must not contain the tip. Keep them separate.
+- Never use the words "edge", "initiative", "advantage", or "pawns of value". Describe loss only as a piece or pawn you lose, or just say "a small/big loss".
 
-export async function explainMistake(m) 
-{
-    const f = buildFacts(m)
-    
-    const userMessage = `${f.player} played ${f.moveNumber}. ${f.played}, which was a ${f.label}.
+Respond with ONLY a JSON object, no other text, in exactly this shape:
+{"title": "<5-8 word headline>", "explanation": "<2-3 sentences: what went wrong, then what to try>", "tip": "<one short rule of thumb for next time>"}`;
 
-    Position before the move:
-    ${f.board}
+function buildUserMessage(f) {
+  const lines = [
+    `${f.player} played ${f.moveNumber}. ${f.played} (a ${f.label}).`,
+    '',
+    'Board before the move:',
+    f.board,
+    '',
+    'Verified facts:',
+    `- Better move: ${f.best ?? 'unknown'}${f.bestCaptures ? ` (captures a ${f.bestCaptures})` : ''}${f.bestGivesCheck ? ' (gives check)' : ''}.`,
+    `- After the move played, the opponent's strongest reply is ${f.opponentReply ?? 'unknown'}${f.replyCaptures ? `, capturing a ${f.replyCaptures}` : ''}${f.replyGivesCheck ? ', giving check' : ''}${f.replyIsMate ? ', which is checkmate' : ''}.`,
+    `- Approximate cost of the mistake: ${f.pawnsLost} pawn(s) of value.`,
+  ];
+  return lines.join('\n');
+}
 
-    Facts from the chess engine:
-    - The better move was ${f.best ?? 'unknown'}.
-    - After the move played, the opponent's strongest reply is ${f.opponentReply ?? 'unknown'}.
-    - The mistake costs roughly ${f.pawnsLost} pawn(s) of value.
+function parseExplanation(text) {
+   if (typeof text !== 'string' || !text.trim()) {
+    throw new Error('Empty response: no text block returned');
+  }
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end <= start) throw new Error('No JSON object found');
+  const data = JSON.parse(text.slice(start, end + 1));
 
-    Explain the mistake to the player.`
+  for (const key of ['title', 'explanation', 'tip']) {
+    if (typeof data[key] !== 'string' || !data[key].trim()) {
+      throw new Error(`Missing or invalid field: ${key}`);
+    }
+  }
+  return { title: data.title.trim(), explanation: data.explanation.trim(), tip: data.tip.trim() };
+}
 
+export async function explainMistake(m, { model = DEFAULT_MODEL } = {}) {
+  const facts = buildFacts(m);
+  const usage = { input_tokens: 0, output_tokens: 0 };
+  let lastError;
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
     const res = await client.messages.create({
-        model: MODEL,
-        max_tokens: 300,
-        thinking: { type: 'between_tools' },
-        system: SYSTEM,
-        messages: [{ role: 'user', content: userMessage}]
-    })
+      model,
+      max_tokens: 400,
+      ...(THINKING[model] && { thinking: THINKING[model] }),
+      system: SYSTEM,
+      messages: [{ role: 'user', content: buildUserMessage(facts) }],
+    });
+    usage.input_tokens += res.usage.input_tokens;
+    usage.output_tokens += res.usage.output_tokens;
 
-    return { text: res.content[0].text, usage: res.usage}
+    const text = res.content.find((b) => b.type === 'text')?.text ?? ''
+
+    try {
+      return { ...parseExplanation(text), facts, usage, model, attempts: attempt };
+    } catch (e) {
+      lastError = e;
+    }
+  }
+  throw new Error(`Could not get valid JSON after 2 attempts: ${lastError.message}`);
 }
