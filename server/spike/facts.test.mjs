@@ -1,4 +1,13 @@
-import { describeMove } from "./facts.mjs"
+import { describeMove, themeOf } from "./facts.mjs"
+
+const baseFacts = {
+  replyIsMate: false,
+  bestIsMate: false,
+  replyCaptures: null,
+  bestCaptures: null,
+  moveNumber: 20,
+  cpLoss: 0
+};
 
 describe('detects a capture', () => {
 
@@ -18,3 +27,43 @@ describe('detects a checkmate', () => {
     test('Check', () => expect(r.givesCheck).toBe(true))
     test('Checkmate', () => expect(r.isMate).toBe(true))
 })
+
+describe('themeOf', () => {
+  test('returns allowed-mate when the reply is checkmate', () => {
+    expect(themeOf({ ...baseFacts, replyIsMate: true })).toBe('allowed-mate');
+  });
+
+  test('returns missed-mate when the best move was mate', () => {
+    expect(themeOf({ ...baseFacts, bestIsMate: true })).toBe('missed-mate');
+  });
+
+  test('returns hung-piece when the reply captures a non-pawn piece', () => {
+    expect(themeOf({ ...baseFacts, replyCaptures: 'knight' })).toBe('hung-piece');
+  });
+
+  test('returns missed-capture when the best reply captures a non-pawn piece', () => {
+    expect(themeOf({ ...baseFacts, bestCaptures: 'rook' })).toBe('missed-capture');
+  });
+
+  test('a pawn capture alone does not count as hung-piece', () => {
+    expect(themeOf({ ...baseFacts, replyCaptures: 'pawn' })).toBe('general');
+  });
+
+  test('returns opening for an early move with no other theme', () => {
+    expect(themeOf({ ...baseFacts, moveNumber: 5 })).toBe('opening');
+  });
+
+  test('returns general when nothing else matches', () => {
+    expect(themeOf(baseFacts)).toBe('general');
+  });
+
+  test('allowed-mate wins over hung-piece (most specific rule first)', () => {
+    expect(
+      themeOf({ ...baseFacts, replyIsMate: true, replyCaptures: 'queen' })
+    ).toBe('allowed-mate');
+  });
+
+  test('large loss with no other theme is a blunder', () => {
+    expect(themeOf({ ...baseFacts, cpLoss: 450 })).toBe('blunder');
+    });
+});

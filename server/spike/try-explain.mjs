@@ -14,7 +14,12 @@ engine.quit()
 
 for (const m of topMistakes)
 {
-    const { title, explanation, tip, usage } = await explainMistake(m)
+    const r = await explainMistake(m)
+    if (r.skipped) {
+      console.log(`Skipped: ${r.reason}`);
+      continue
+    }
+    const { title, explanation, tip, usage } = r
     console.log(`\n${m.moveNumber}. ${m.played} (${m.label})`)
     console.log(title)
     console.log(explanation)

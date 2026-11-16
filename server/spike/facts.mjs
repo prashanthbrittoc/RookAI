@@ -23,7 +23,7 @@ export function buildFacts(m) {
   const best = describeMove(m.fenBefore, m.bestUci);
   const reply = describeMove(m.fenAfter, m.replyUci);
 
-  return {
+  const facts = {
     player: m.color === 'w' ? 'White' : 'Black',
     moveNumber: m.moveNumber,
     label: m.label,
@@ -34,13 +34,17 @@ export function buildFacts(m) {
     bestPiece: best?.piece ?? null,
     bestCaptures: best?.captures ?? null,
     bestGivesCheck: best?.givesCheck ?? false,
+    bestIsMate: best?.isMate??false,
     opponentReply: reply?.san ?? null,
     replyPiece: reply?.piece ?? null,
     replyCaptures: reply?.captures ?? null,
     replyGivesCheck: reply?.givesCheck ?? false,
     replyIsMate: reply?.isMate ?? false,
     board: new Chess(m.fenBefore).ascii(),
-  };
+  }
+
+  facts.theme = themeOf(facts)
+  return facts
 }
 
 const PIECE = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen', k: 'king'}
@@ -61,4 +65,14 @@ export function describeMove(fen, uci) {
     } catch {
         return null
     }
+}
+
+export function themeOf(f) {
+  if (f.replyIsMate) return 'allowed-mate'
+  if (f.bestIsMate) return 'missed-mate'
+  if (f.replyCaptures && f.replyCaptures !== 'pawn') return 'hung-piece'
+  if (f.bestCaptures && f.bestCaptures !== 'pawn') return 'missed-capture'
+  if (f.moveNumber <= 8) return 'opening'
+  if (f.cpLoss >= 300) return 'blunder'
+  return 'general'
 }

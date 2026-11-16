@@ -17,6 +17,10 @@ for (const i of PICK) {
   console.log(`\n=== #${i} ${m.moveNumber}. ${m.played} (${m.label}) ===`);
   for (const model of MODELS) {
     const r = await explainMistake(m, { model });
+    if (r.skipped) {
+      console.log(`Skipped: ${r.reason}`);
+      continue
+    }
     const cost = (r.usage.input_tokens * PRICE[model].in + r.usage.output_tokens * PRICE[model].out) / 1e6;
     const unknown = findUnknownMoves(`${r.title} ${r.explanation} ${r.tip}`, r.facts);
     console.log(`\n[${model}] attempts=${r.attempts} tokens=${r.usage.input_tokens}/${r.usage.output_tokens} cost=$${cost.toFixed(5)}`);
