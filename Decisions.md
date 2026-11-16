@@ -7,3 +7,10 @@
   Needs a Dockerfile (already working). Fallback: WASM.
 - Gotchas: Dockerfile must be named exactly "Dockerfile" (Linux is case-sensitive);
   Root Directory must be set to /server/bench.
+
+# 16-11-2026: v1 vs v2
+ Mistakes are tagged by theme using verified facts (mate, capture, opening) and each theme has its own coaching hint, because one generic prompt gave generic tips.
+- Level bands (beginner/improving/intermediate) change vocabulary and how much is explained.
+- Guard: skip when played move equals the engine best move (depth noise).
+- Prompt versioned (PROMPT_VERSION) so cached results from an old prompt can be told apart.
+- Scorecard result: v1 27/29 clean -> v2 26/29 clean on 1 mistakes. Remaining failures: 2 .
