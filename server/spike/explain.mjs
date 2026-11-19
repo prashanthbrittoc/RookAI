@@ -2,6 +2,10 @@ import 'dotenv/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { buildFacts } from './facts.mjs';
 import { LEVEL_GUIDE } from './level.mjs';
+import { BadOutputError } from './errors.mjs';
+
+let _client
+const getClient = () => (_client ??= new Anthropic({ maxRetries: 3, timeout: 30_000 }));
 
 const THINKING = {
   'claude-haiku-5-5': { type: 'disabled' },
@@ -76,7 +80,7 @@ function parseExplanation(text) {
   return { title: data.title.trim(), explanation: data.explanation.trim(), tip: data.tip.trim() };
 }
 
-export async function explainMistake(m, { model = DEFAULT_MODEL, level = 'beginner' } = {}) {
+export async function explainMistake(m, { model = DEFAULT_MODEL, level = 'beginner', client = getClient() } = {}) {
   const facts = buildFacts(m);
 
   if (facts.best && facts.best === facts.played) {
@@ -105,7 +109,7 @@ export async function explainMistake(m, { model = DEFAULT_MODEL, level = 'beginn
       lastError = e;
     }
   }
-  throw new Error(`Could not get valid JSON after 2 attempts: ${lastError.message}`);
+  throw new BadOutputError(`Could not get valid JSON after 2 attempts: ${lastError.message}`, usage);
 }
 
 export const PROMPT_VERSION = 'v2'
