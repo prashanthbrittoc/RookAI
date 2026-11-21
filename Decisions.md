@@ -14,3 +14,10 @@
 - Guard: skip when played move equals the engine best move (depth noise).
 - Prompt versioned (PROMPT_VERSION) so cached results from an old prompt can be told apart.
 - Scorecard result: v1 27/29 clean -> v2 26/29 clean on 1 mistakes. Remaining failures: 2 .
+
+# 21-11-2026: Resilience and cost control for LLM calls
+- Used the SDK's built-in retries (maxRetries 3, 30 s timeout) instead of a custom backoff loop.
+- Errors classified retryable vs not (429/5xx/network vs 401/400/bad output) so the Week 4 queue can decide.
+- Max 5 explanations per game and concurrency 3
+- Failures are per item: a game returns partial results plus a failures list.
+- Game summary computed in code, not by the LLM: exact, free, instant.
