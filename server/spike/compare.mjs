@@ -1,16 +1,12 @@
 import fs from 'fs';
 import { explainMistake } from './explain.mjs';
 import { findUnknownMoves } from './check.mjs';
+import { costUsd } from './pricing.mjs';
 
 const fixtures = JSON.parse(fs.readFileSync('out/fixtures.json', 'utf8'));
 const PICK = [0, 3, 5, 8, 11, 14]; // replace with your 6 hand-picked indexes
 const MODELS = ['claude-haiku-5-5', 'claude-sonnet-5-5'];
 
-// Fill these from Anthropic's pricing page (USD per million tokens)
-const PRICE = {
-  'claude-haiku-5-5': { in: 0.10, out: 0.50 },
-  'claude-sonnet-5-5': { in: 2.00, out: 10.00 },
-};
 
 for (const i of PICK) {
   const m = fixtures[i];
@@ -21,7 +17,7 @@ for (const i of PICK) {
       console.log(`Skipped: ${r.reason}`);
       continue
     }
-    const cost = (r.usage.input_tokens * PRICE[model].in + r.usage.output_tokens * PRICE[model].out) / 1e6;
+    const cost = costUsd(model,r.usage);
     const unknown = findUnknownMoves(`${r.title} ${r.explanation} ${r.tip}`, r.facts);
     console.log(`\n[${model}] attempts=${r.attempts} tokens=${r.usage.input_tokens}/${r.usage.output_tokens} cost=$${cost.toFixed(5)}`);
     console.log(r.title);
