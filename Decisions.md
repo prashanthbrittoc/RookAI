@@ -21,3 +21,12 @@
 - Max 5 explanations per game and concurrency 3
 - Failures are per item: a game returns partial results plus a failures list.
 - Game summary computed in code, not by the LLM: exact, free, instant.
+
+## 2026-11-06: Caching analyses in MongoDB
+- Key = hash of (moves, color, depth, level, model, prompt version, analysis version). Headers, clocks and usernames excluded, so identical games from different users share one result.
+- Hash uses the move list, not the PGN text, so clock comments don't cause misses.
+- Only complete results are cached; partial ones are returned but not stored.
+- Cache failures never fail the request (cache is an optimization).
+- Duplicate protection: in-flight map (one process) + unique index with duplicate-key handling (many processes).
+- Measured: miss vs hit timings
+- Known limit: changing PROMPT_VERSION or ANALYSIS_VERSION orphans old documents (no cleanup yet).
