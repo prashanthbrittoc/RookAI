@@ -1,6 +1,6 @@
 import fs from 'fs';
-import { explainMistake, PROMPT_VERSION } from './explain.mjs';
-import { findUnknownMoves } from './check.mjs';
+import { explainMistake, PROMPT_VERSION } from '../src/llm/explain.mjs';
+import { findUnknownMoves } from '../src/llm/check.mjs';
 
 const BANNED = /centipawn|evaluation|stockfish|\bengine\b|[+-]?\d+\.\d+/i;
 

@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { pickTopMistakes } from './classify.mjs'
+import { pickTopMistakes } from '../src/chess/classify.mjs'
 
 const depth = process.argv[2] || 10
 const files = fs.readdirSync('out').filter( f => f.endsWith(`.d${depth}.json`))

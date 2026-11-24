@@ -1,4 +1,4 @@
-import { GameAnalysis } from './model.mjs';
+import { GameAnalysis } from './models/GameAnalysis.mjs';
 
 export const mongoStore = {
   async find(cacheKey) {

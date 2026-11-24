@@ -1,11 +1,11 @@
 import fs from 'fs';
-import { connectDb, disconnectDb } from './db.mjs';
-import { GameAnalysis } from './model.mjs';
-import { mongoStore } from './store-mongo.mjs';
-import { createEngine } from './create-engine.mjs';
-import { analyzeGame } from './analyze-game.mjs';
-import { explainGame } from './explain-game.mjs';
-import { getOrCreateAnalysis } from './analysis-service.mjs';
+import { connectDb, disconnectDb } from '../src/db/connect.mjs';
+import { GameAnalysis } from '../src/db/models/GameAnalysis.mjs';
+import { mongoStore } from '../src/db/analysis-store.mjs';
+import { createEngine } from '../src/engine/create-engine.mjs';
+import { analyzeGame } from '../src/chess/analyze-game.mjs';
+import { explainGame } from '../src/llm/explain-game.mjs';
+import { getOrCreateAnalysis } from '../src/services/analysis-service.mjs';
 
 const [PGN_FILE, COLOR, LEVEL] = process.argv.slice(2);
 const pgn = fs.readFileSync(PGN_FILE, 'utf8');

@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { analyzeGame } from './analyze-game.mjs'
+import { analyzeGame } from '../src/chess/analyze-game.mjs'
 
 const ENGINE = process.argv[2]
 const depth = Number(process.argv[3] || 10)

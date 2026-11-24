@@ -1,5 +1,5 @@
 import { gameHash, cacheKey, ANALYSIS_VERSION } from './cache-key.mjs';
-import { PROMPT_VERSION, DEFAULT_MODEL } from './explain.mjs';
+import { PROMPT_VERSION, DEFAULT_MODEL } from '../llm/explain.mjs';
 
 export const DEFAULT_DEPTH = 10;
 const inFlight = new Map(); // requests running right now, by cache key

@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
-import { createEngine } from './create-engine.mjs'
-import { analyzeGame } from './analyze-game.mjs'
+import { createEngine } from '../src/engine/create-engine.mjs'
+import { analyzeGame } from '../src/chess/analyze-game.mjs'
 import { create } from 'domain'
 
 const engine = await createEngine()

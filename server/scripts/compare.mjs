@@ -1,7 +1,7 @@
 import fs from 'fs';
-import { explainMistake } from './explain.mjs';
-import { findUnknownMoves } from './check.mjs';
-import { costUsd } from './pricing.mjs';
+import { explainMistake } from '../src/llm/explain.mjs';
+import { findUnknownMoves } from '../src/llm/check.mjs';
+import { costUsd } from '../src/llm/pricing.mjs';
 
 const fixtures = JSON.parse(fs.readFileSync('out/fixtures.json', 'utf8'));
 const PICK = [0, 3, 5, 8, 11, 14]; // replace with your 6 hand-picked indexes
