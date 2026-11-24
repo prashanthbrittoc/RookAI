@@ -75,3 +75,23 @@ test('a broken cache does not break the analysis', async () => {
   expect(r.cached).toBe(false);
   expect(r.analysis.items.length).toBeGreaterThan(0);
 });
+
+test('records a miss event with cost, then a hit event with savings', async () => {
+  const d = makeDeps();
+  const events = [];
+  d.recordEvent = async (e) => events.push(e);
+
+  await getOrCreateAnalysis({ pgn: PGN, color: 'w' }, d);
+  await getOrCreateAnalysis({ pgn: PGN, color: 'w' }, d);
+
+  expect(events).toHaveLength(2);
+  expect(events[0]).toMatchObject({ cached: false, costUsd: 0.001, inputTokens: 100, outputTokens: 50 });
+  expect(events[1]).toMatchObject({ cached: true, savedUsd: 0.001, costUsd: 0 });
+});
+
+test('a failing recordEvent does not break the request', async () => {
+  const d = makeDeps();
+  d.recordEvent = async () => { throw new Error('db down'); };
+  const r = await getOrCreateAnalysis({ pgn: PGN, color: 'w' }, d);
+  expect(r.analysis.items.length).toBeGreaterThan(0);
+});

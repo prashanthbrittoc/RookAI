@@ -6,6 +6,10 @@ import { createEngine } from '../src/engine/create-engine.mjs';
 import { analyzeGame } from '../src/chess/analyze-game.mjs';
 import { explainGame } from '../src/llm/explain-game.mjs';
 import { getOrCreateAnalysis } from '../src/services/analysis-service.mjs';
+import { requireEnv } from '../src/config/env.mjs';
+import { recordUsageEvent } from '../src/db/analysis-store.mjs';
+
+requireEnv('MONGODB_URI','ANTHROPIC_API_KEY')
 
 const [PGN_FILE, COLOR, LEVEL] = process.argv.slice(2);
 const pgn = fs.readFileSync(PGN_FILE, 'utf8');
@@ -21,6 +25,7 @@ const deps = {
     return analyzeGame(engine, p, opts);
   },
   explain: explainGame,
+  recordEvent: recordUsageEvent,
 };
 
 console.time('total');

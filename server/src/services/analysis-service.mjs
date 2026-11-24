@@ -4,10 +4,16 @@ import { PROMPT_VERSION, DEFAULT_MODEL } from '../llm/explain.mjs';
 export const DEFAULT_DEPTH = 10;
 const inFlight = new Map(); // requests running right now, by cache key
 
+async function record(deps, evt) {
+  try { await deps.recordEvent?.(evt); }
+  catch (e) { console.error('usage event failed:', e.message); } // never break a request for bookkeeping
+}
+
 export async function getOrCreateAnalysis(
   { pgn, color, level = 'beginner', depth = DEFAULT_DEPTH, model = DEFAULT_MODEL },
-  { store, analyze, explain }
+  deps
 ) {
+  const { store, analyze, explain} = deps
   const gh = gameHash(pgn);
   const key = cacheKey({ gameHash: gh, color, depth, level, model, promptVersion: PROMPT_VERSION });
 
@@ -15,16 +21,36 @@ export async function getOrCreateAnalysis(
   if (inFlight.has(key)) return inFlight.get(key);
 
   const job = (async () => {
+    
+    const started = Date.now()
+
     // The cache is an optimization: if it is down, carry on as a miss
     try {
       const hit = await store.find(key);
-      if (hit) return { cached: true, analysis: hit, failures: [] };
+      if (hit) {
+        await record(deps, {
+          cacheKey: key, cached: true, model, level, promptVersion: PROMPT_VERSION,
+          costUsd: 0,                      
+          savedUsd: hit.costUsd ?? 0,
+          durationMs: Date.now() - started,
+        });
+        return { cached: true, analysis: hit, failures: [] };
+      };
     } catch (e) {
       console.error('cache lookup failed:', e.message);
     }
 
     const { moves, topMistakes } = await analyze(pgn, { depth, color });
     const exp = await explain(topMistakes, { level, model });
+
+    await record(deps, {
+      cached: false,     
+      model,                
+      inputTokens: exp.usage.input_tokens,
+      outputTokens: exp.usage.output_tokens,
+      costUsd: exp.costUsd ?? 0,         // what we actually paid
+      durationMs: Date.now() - started,
+    });
 
     const doc = {
       cacheKey: key, gameHash: gh, color, depth, level, model,

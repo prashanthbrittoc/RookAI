@@ -1,4 +1,7 @@
 import { GameAnalysis } from './models/GameAnalysis.mjs';
+import { UsageEvent } from './models/UsageEvent.mjs';
+
+export const recordUsageEvent = (evt) =>UsageEvent.create(evt)
 
 export const mongoStore = {
   async find(cacheKey) {
@@ -13,4 +16,4 @@ export const mongoStore = {
       throw e;
     }
   },
-};
+}; 
