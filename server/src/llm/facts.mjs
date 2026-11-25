@@ -60,7 +60,7 @@ export function describeMove(fen, uci) {
             piece: PIECE[m.piece],
             captures: m.captured? PIECE[m.captured]: null,
             givesCheck: chess.isCheck(),
-            isMate: chess.isCheckmate()
+            isMate: chess.isCheckmate(),
         }
     } catch {
         return null

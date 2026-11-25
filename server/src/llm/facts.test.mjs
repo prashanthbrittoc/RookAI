@@ -28,6 +28,24 @@ describe('detects a checkmate', () => {
     test('Checkmate', () => expect(r.isMate).toBe(true))
 })
 
+describe('detects a promotion', () => {
+  const fen = '1nbqkbnr/Pppppppp/8/8/8/8/1PPPPPPP/RNBQKBNR w KQk - 0 1'
+
+  test('push promotion', () => {
+    const r = describeMove(fen, 'a7a8q')
+    expect(r.san).toBe('a8=Q')
+    expect(r.piece).toBe('pawn')      // m.piece is the piece that moved, still a pawn
+    expect(r.captures).toBe(null)
+    expect(r.givesCheck).toBe(false)
+  })
+
+  test('capture promotion', () => {
+    const r = describeMove(fen, 'a7b8q')
+    expect(r.san).toBe('axb8=Q')
+    expect(r.captures).toBe('knight')
+  })
+})
+
 describe('themeOf', () => {
   test('returns allowed-mate when the reply is checkmate', () => {
     expect(themeOf({ ...baseFacts, replyIsMate: true })).toBe('allowed-mate');

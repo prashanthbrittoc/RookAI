@@ -34,7 +34,12 @@ console.timeEnd('total');
 
 console.log(r.cached ? 'CACHE HIT' : 'CACHE MISS');
 console.log('explanations:', r.analysis.items.length, '| failures:', r.failures.length);
-console.log('tokens:', r.analysis.usage, '| cost: $' + r.analysis.costUsd);
+
+if (r.cached) {
+  console.log(`tokens: 0 in / 0 out | cost: $0 (saved $${r.analysis.costUsd})`);
+} else {
+  console.log(`tokens:`, r.analysis.usage, `| cost: $${r.analysis.costUsd}`);
+}
 
 engine?.quit();
 await disconnectDb();

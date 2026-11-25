@@ -1,18 +1,28 @@
 import { gameHash, cacheKey, ANALYSIS_VERSION } from './cache-key.mjs';
 import { PROMPT_VERSION, DEFAULT_MODEL } from '../llm/explain.mjs';
+import { LEVEL_GUIDE } from '../llm/level.mjs';
+
+const colors = ['w','b']
+const max_pgn_chars = 20_000
 
 export const DEFAULT_DEPTH = 10;
 const inFlight = new Map(); // requests running right now, by cache key
 
 async function record(deps, evt) {
   try { await deps.recordEvent?.(evt); }
-  catch (e) { console.error('usage event failed:', e.message); } // never break a request for bookkeeping
+  catch (e) { console.log('usage event failed:', e.message); } // never break a request for bookkeeping
 }
 
 export async function getOrCreateAnalysis(
   { pgn, color, level = 'beginner', depth = DEFAULT_DEPTH, model = DEFAULT_MODEL },
   deps
 ) {
+
+  if (typeof pgn !== 'string' || !pgn.trim()) throw new Error('Invalid PGN');
+  if (pgn.length > max_pgn_chars) throw new Error('PGN too large');
+  if (!colors.includes(color)) throw new Error('color must be "w" or "b"');
+  if (!(level in LEVEL_GUIDE)) throw new Error(`unknown level: ${level}`);
+  
   const { store, analyze, explain} = deps
   const gh = gameHash(pgn);
   const key = cacheKey({ gameHash: gh, color, depth, level, model, promptVersion: PROMPT_VERSION });
@@ -37,7 +47,7 @@ export async function getOrCreateAnalysis(
         return { cached: true, analysis: hit, failures: [] };
       };
     } catch (e) {
-      console.error('cache lookup failed:', e.message);
+      console.log('cache lookup failed:', e.message);
     }
 
     const { moves, topMistakes } = await analyze(pgn, { depth, color });
@@ -67,7 +77,7 @@ export async function getOrCreateAnalysis(
       try {
         await store.save(doc);
       } catch (e) {
-        console.error('cache save failed:', e.message); // the user still gets their result
+        console.log('cache save failed:', e.message); // the user still gets their result
       }
     }
     return { cached: false, analysis: doc, failures: exp.failures };

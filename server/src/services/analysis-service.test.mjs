@@ -95,3 +95,21 @@ test('a failing recordEvent does not break the request', async () => {
   const r = await getOrCreateAnalysis({ pgn: PGN, color: 'w' }, d);
   expect(r.analysis.items.length).toBeGreaterThan(0);
 });
+
+describe('input validation', () => {
+  const good = { pgn: '1. e4 e5', color: 'w', level: 'beginner' };
+
+  test.each([
+    [{ ...good, pgn: '' },            'Invalid PGN'],
+    [{ ...good, pgn: '   ' },         'Invalid PGN'],
+    [{ ...good, pgn: 123 },           'Invalid PGN'],
+    [{ ...good, pgn: 'x'.repeat(20_001) }, 'PGN too large'],
+    [{ ...good, color: 'x' },         'color must be "w" or "b"'],
+    [{ ...good, level: 'wizard' },    'unknown level: wizard'],
+  ])('rejects bad input %#', async (input, message) => {
+    const deps = makeDeps();
+    await expect(getOrCreateAnalysis(input, deps)).rejects.toThrow(message);
+    expect(deps.calls.analyze).toBe(0);   // no engine work
+    expect(deps.calls.explain).toBe(0);   // no paid Claude call
+  });
+});
