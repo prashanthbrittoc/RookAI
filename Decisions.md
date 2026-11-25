@@ -30,3 +30,22 @@
 - Duplicate protection: in-flight map (one process) + unique index with duplicate-key handling (many processes).
 - Measured: miss vs hit timings
 - Known limit: changing PROMPT_VERSION or ANALYSIS_VERSION orphans old documents (no cleanup yet).
+
+## Week 2 recap (Nov 2 - 8)
+Shipped: Claude explanation pipeline (JSON output, themes, levels), invented-move check,
+resilience (retries, error classes, concurrency), MongoDB cache with usage events and a report,
+restructure into src/.
+
+Numbers:
+- Cost per explained game: $0.000322 (Haiku). Tokens per game: 1680 in / 308 out.
+- Cache miss: 3.331 s, $0.0007401. Cache hit: 117.691 ms, $0.
+- Scorecard: 27/29 explanations clean on 29 real mistakes.
+- Tests: 72 passing. 
+
+Known limitations: old cache entries are never cleaned up; the in-flight dedupe only works within one
+process; theme tagging is a heuristic; explanations are only as good as the engine facts.
+
+- Built a pipeline that detects blunders with Stockfish and generates plain-English coaching with the Claude API, validating output against engine-verified facts.
+- Cut repeat-analysis cost to $0 with a MongoDB cache keyed on game, player, depth and prompt version; 
+  cache hits return in 118 ms vs 3.3 s.
+- Added retries, error classification and bounded concurrency;
