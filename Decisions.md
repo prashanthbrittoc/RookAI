@@ -49,3 +49,11 @@ process; theme tagging is a heuristic; explanations are only as good as the engi
 - Cut repeat-analysis cost to $0 with a MongoDB cache keyed on game, player, depth and prompt version; 
   cache hits return in 118 ms vs 3.3 s.
 - Added retries, error classification and bounded concurrency;
+
+## 2026-11-__: Chess.com service
+- The server fetches PGNs itself; the client sends (username, gameId, archive), never raw PGN. Only real games get analyzed, and the browser can't send junk.
+- archive month travels with the game ID so fetching one game costs one request, not a search.
+- Usernames validated against a strict pattern before building URLs (no path injection).
+- Typed errors with codes (USER_NOT_FOUND, RATE_LIMITED, TIMEOUT...) carry an HTTP status, so the API error handler stays trivial.
+- Sequential month fetches, short TTL cache and a descriptive User-Agent, to be a polite API client.
+- Variants and games without PGN are filtered out (we only analyze standard chess).
