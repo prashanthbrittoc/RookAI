@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "analyze": "node scripts/cached-run.mjs",
-    "report": "node scripts/usage-report.mjs"
+    "report": "node scripts/usage-report.mjs",
+    "chesscom": "node scripts/chesscom-try.mjs"
   },
   "keywords": [],
   "author": "",
