@@ -50,10 +50,19 @@ process; theme tagging is a heuristic; explanations are only as good as the engi
   cache hits return in 118 ms vs 3.3 s.
 - Added retries, error classification and bounded concurrency;
 
-## 2026-11-__: Chess.com service
+## 2026-11-27: Chess.com service
 - The server fetches PGNs itself; the client sends (username, gameId, archive), never raw PGN. Only real games get analyzed, and the browser can't send junk.
 - archive month travels with the game ID so fetching one game costs one request, not a search.
 - Usernames validated against a strict pattern before building URLs (no path injection).
 - Typed errors with codes (USER_NOT_FOUND, RATE_LIMITED, TIMEOUT...) carry an HTTP status, so the API error handler stays trivial.
 - Sequential month fetches, short TTL cache and a descriptive User-Agent, to be a polite API client.
 - Variants and games without PGN are filtered out (we only analyze standard chess).
+
+## 2026-11-28: Auth (signup/login)
+- Single JWT in an httpOnly cookie, 7-day expiry, HS256 with the algorithm pinned on verify. No refresh rotation: it removes a lot of cross-site complexity and is enough for this app.
+- Cookie flags depend on the environment: Lax in dev, SameSite=None + Secure in production, because Vercel and Railway are different sites.
+- bcrypt cost 12; max password length 72 because bcrypt truncates beyond it.
+- Same 401 for unknown email and wrong password, plus a dummy-hash comparison to keep timing similar.
+- Known limit: signup reveals "email taken" (usability over enumeration resistance).
+- app.mjs vs server.mjs split, so Supertest can mount the app without a port.
+- One error shape everywhere: { error: { code, message, details? } }.
